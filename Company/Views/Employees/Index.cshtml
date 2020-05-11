@@ -1,0 +1,129 @@
+﻿@model Company.Models.SearchEmployeeModel
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="panel-body">
+    <fieldset class="scheduler-border">
+        <legend class="scheduler-border">Find Employee</legend>
+        <form asp-controller="EmployeesController" asp-action="Index" method="post">
+            <div class="row form-group">
+                <div class="col-md-4">
+                    @Html.LabelFor(model => model.NameString, new { @class = "control-label" })
+                    @Html.TextBoxFor(model => model.NameString, null, new { @class = "form-control", id = "NameString" })
+                </div>
+                <div class="col-md-2">
+                    @Html.LabelFor(model => model.DateFrom, new { @class = "control-label" })
+                    @Html.TextBoxFor(model => model.DateFrom, null, new { name = "dateFrom", id = "dateFrom", @class = "datefield form-control" })
+                </div>
+                <div class="col-md-2">
+                    @Html.LabelFor(model => model.DateTo, new { @class = "control-label" })
+                    @Html.TextBoxFor(model => model.DateTo, null, new { name = "dateTo", id = "dateTo", @class = "datefield form-control" })
+                </div>
+                <div class="col-md-4">
+                    @Html.LabelFor(model => model.Manager, new { @class = "control-label" })
+                    @Html.DropDownListFor(model => model.Manager, Model.Managers as SelectList, new { @class = "form-control", id = "Manager" })
+                </div>
+            </div>
+        </form>
+
+    </fieldset>
+    <div class="clearfix"></div>
+</div>
+
+<table class="table table-striped" id="tblEmployees">
+    <thead class="thead-light">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Employees[0].FirstName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Employees[0].LastName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Employees[0].HireDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Employees[0].ManagerName)
+            </th>
+        </tr>
+    </thead>
+</table>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            $("#tblEmployees").DataTable({
+                "processing": false,
+                "serverSide": true,
+                "filter": false,
+                "orderMulti": false,
+                "lengthChange": false,
+                "pageLength": 10,
+                "bSort": false,
+                'ajax': {
+                    "type": "POST",
+                    "url": '@Url.Action("GetEmployees")',
+                    "datatype": "json",
+                    "data": function (d) {
+                        d.nameString = $('#NameString').val();
+                        d.dateFrom = $('#dateFrom').val();
+                        d.dateTo = $('#dateTo').val();
+                        d.manager = $('#Manager').val()
+                    },
+                },
+
+                "columns": [
+                    { "data": "FirstName" },
+                    { "data": "LastName" },
+                    {
+                        "data": "HireDate",
+                        render: function (data) {
+                            return moment(data).format("DD/MM/YYYY");
+                        }
+                    },
+                    { "data": "ManagerName" },
+                ]
+            })
+
+            $('#NameString').autocomplete({
+                source: '@Url.Action("AutoCompleteName")',
+                minLength: 1,
+                select: function () {
+                    $('#tblEmployees').DataTable().ajax.reload()
+                }
+            });
+
+            $('#dateTo').datepicker({
+                dateFormat: "dd/mm/yy",
+            });
+            $('#dateFrom').datepicker({
+                dateFormat: "dd/mm/yy",
+            });
+
+
+            $('#Manager').change(function () {
+                $('#tblEmployees').DataTable().ajax.reload()
+            });
+
+            $('#NameString').on('input', function () {
+                $('#tblEmployees').DataTable().ajax.reload()
+            });
+
+            $('#NameString').change(function () {
+                $('#tblEmployees').DataTable().ajax.reload()
+            });
+
+            $('#dateFrom').change(function () {
+                $('#tblEmployees').DataTable().ajax.reload()
+            });
+
+            $('#dateTo').change(function () {
+                $('#tblEmployees').DataTable().ajax.reload()
+            });
+        });
+    </script>
+}
